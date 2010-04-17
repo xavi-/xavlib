@@ -1,6 +1,7 @@
 // /channel/<session-id>/send?msg=<json> => returns an info-id
 // /channel/<session-id>/read?info-id=<int-id> => returns a list of json messages
 (function(context) {
+    var sys = require("sys");
     var url = require("url");
     var _onCreate = [];
 
