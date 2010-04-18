@@ -3,7 +3,7 @@
 (function(context) {
     var sys = require("sys");
     var url = require("url");
-    var _onCreate = [];
+    var event = require("../event");
 
     var Channel = (function() {
         var nextInfoId = (function() {
@@ -21,7 +21,7 @@
         }
         
         return function Channel(id) {
-            var users = {}, responses = [], _onReceive = [];
+            var users = {}, responses = [];
             
             this.id = id;
             
@@ -31,7 +31,7 @@
             
             this.users = function() { return users; };
             
-            this.onReceive = function onReceive(callback) { _onReceive.push(callback); };
+            this.onReceive = event.create(this);
             
             this.info = function info(userId, type, res) {
                 var content = { type: type };
@@ -57,7 +57,8 @@
                 
                 sendMore(userId, content);
                 
-                for(var i = 0; i < _onReceive.length; i++) { _onReceive[i].call(this, info[0].message, sendMore); }
+                this.onReceive.trigger(info[0].message, sendMore);
+                
                 if(!info[0].message.content) { return -1; }
                 
                 Array.prototype.push.apply(this.data, info);
@@ -97,7 +98,7 @@
                 for(var userId in users) if(users[userId] <= 0) { delete users[userId]; }
             }, 5000);
             
-            for(var i = 0; i < _onCreate.length; i++) { _onCreate[i].call(this, id, this); }
+            context.onCreate.trigger(id, this);
         };
     })();
     
@@ -178,5 +179,5 @@
     context.start = start;
     context.channels = channels;
     context.create = create;
-    context.onCreate = function(callback) { _onCreate.push(callback); };
+    context.onCreate = event.create();
 })(exports);

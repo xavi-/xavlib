@@ -1,13 +1,15 @@
 (function(context) {
-    function Event(ctx) {
+    function create(ctx) {
         var listeners = [];
         
-        this.add = function(listener) { listeners.push(listener); return this; };
+        function add(listener) { listeners.push(listener); return add; };
         
-        this.trigger = function trigger(e) {
-            for(var i = 0; i < listeners.length; i++) { listeners[i].call(ctx, e, ctx); }
+        add.trigger = function trigger(e) {
+            for(var i = 0; i < listeners.length; i++) { listeners[i].apply(ctx, arguments); }
         };
+        
+        return add;
     };
     
-    context.Event = Event;
+    context.create = create;
 })(exports);
