@@ -1,8 +1,8 @@
 (function(context) {
     function create(ctx) {
-        var listeners = [];
+        var listeners = [], addObj = { add: add };
         
-        function add(listener) { listeners.push(listener); return add; };
+        function add(listener) { listeners.push(listener); return addObj; };
         
         add.trigger = function trigger(e) {
             for(var i = 0; i < listeners.length; i++) { listeners[i].apply(ctx, arguments); }
