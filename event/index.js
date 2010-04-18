@@ -9,7 +9,7 @@
         };
         
         return add;
-    };
+    }
     
     context.create = create;
 })(exports);
