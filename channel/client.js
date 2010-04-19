@@ -44,8 +44,8 @@
             
             function _send(msg) {
                 var client = xhr(),
-                    url = [ "/channel/", id, "/send?msg=", encodeURIComponent(msg) ].join("");
-                client.open("GET", url);
+                    url = [ "/channel/", id, "/send" ].join("");
+                client.open("POST", url);
                 client.onreadystatechange = function() {
                     if(client.readyState !== 4) { return; }
                     
@@ -56,7 +56,7 @@
                     if(queue.length > 0) { _send(queue.shift()); }
                     else { inflight = false; }
                 };
-                client.send();
+                client.send(msg);
                 
                 inflight = true;
             }

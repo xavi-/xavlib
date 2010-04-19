@@ -132,21 +132,27 @@
             srv.patterns.push({
                 test: function(req) { return regSend.test(url.parse(req.url).pathname); },
                 handler: function(req, res) {
-                    var uri = url.parse(req.url, true);
+                    var uri = url.parse(req.url);
                     var channelId = regSend.exec(uri.pathname)[1];
                     
                     channels[channelId] = channels[channelId] || (new Channel(channelId));
                     
                     var userId = req.headers["cookie"] || nextUserId();
-                    var content = JSON.parse(uri.query["msg"]);
-                    var infoId = channels[channelId].send(userId, content).toString();
                     
-                    // reply new info to listeners
-                    res.sendHeader(200, { "Content-Length": infoId.length,
-                                          "Content-Type": "text/plain",
-                                          "Cache-Control": "no-cache",
-                                          "Set-Cookie": userId + "; path=/;"});
-                    res.end(infoId);
+                    // Reading POST data
+                    var data = ""
+                    req.addListener("data", function(chunk) { data += chunk; });
+                    req.addListener("end", function() {
+                        var content = JSON.parse(data);
+                        var infoId = channels[channelId].send(userId, content).toString();
+                        
+                        // reply new info to listeners
+                        res.sendHeader(200, { "Content-Length": infoId.length,
+                                              "Content-Type": "text/plain",
+                                              "Cache-Control": "no-cache",
+                                              "Set-Cookie": userId + "; path=/;"});
+                        res.end(infoId);
+                    });
                 }
             });
         })();
