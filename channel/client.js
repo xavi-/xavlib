@@ -6,30 +6,33 @@
     function Channel(id, initInfo) {
         var onreceive = [], lastInfoId = initInfo || 0;
         
-        function listen() {        
-            var client = xhr(),
-                url = [ "/channel/", id, "/read?info-id=", lastInfoId ].join("");
+        var listen = (function() {
+            var client = xhr();
+            
+            return function() {
+                var url = [ "/channel/", id, "/read?info-id=", lastInfoId ].join("");
                 
-            client.open("GET", url);
-            client.onreadystatechange = function() {            
-                if(client.readyState !== 4) { return; }
-                
-                if(client.status !== 200) { listen(); return; }
-                
-                if(client.responseText) {
-                    var info = JSON.parse(client.responseText);
+                client.open("GET", url);
+                client.onreadystatechange = function() {            
+                    if(client.readyState !== 4) { return; }
                     
-                    for(var i = 0; i < info.length; i++) {
-                        for(var j = 0; j <  onreceive.length; j++) { onreceive[j](info[i].message); }
+                    if(client.status !== 200) { setTimeout(listen, 0); return; }
+                    
+                    if(client.responseText) {
+                        var info = JSON.parse(client.responseText);
                         
-                        if(info[i].infoId > lastInfoId) { lastInfoId = info[i].infoId; }
+                        for(var i = 0; i < info.length; i++) {
+                            for(var j = 0; j <  onreceive.length; j++) { onreceive[j](info[i].message); }
+                            
+                            if(info[i].infoId > lastInfoId) { lastInfoId = info[i].infoId; }
+                        }
                     }
-                }
-                
-                listen();
+                    
+                    setTimeout(listen, 0);
+                };
+                client.send();
             };
-            client.send();
-        }
+        })();
         
         this.id = function() { return id; };
         
@@ -40,11 +43,10 @@
         this.start = function start() { listen(); };
         
         this.send = (function() { 
-            var queue = [], inflight = false;
+            var queue = [], inflight = false, client = xhr();
             
             function _send(msg) {
-                var client = xhr(),
-                    url = [ "/channel/", id, "/send" ].join("");
+                var url = [ "/channel/", id, "/send" ].join("");
                 client.open("POST", url);
                 client.onreadystatechange = function() {
                     if(client.readyState !== 4) { return; }
@@ -53,7 +55,7 @@
                     
                     if(infoId > lastInfoId) { lastInfoId = infoId; }
                     
-                    if(queue.length > 0) { _send(queue.shift()); }
+                    if(queue.length > 0) { setTimeout(function() { _send(queue.shift()); }, 0); }
                     else { inflight = false; }
                 };
                 client.send(msg);
