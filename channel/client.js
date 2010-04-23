@@ -44,9 +44,9 @@
         
         this.send = (function() { 
             var queue = [], inflight = false, client = xhr();
+            var url = [ "/channel/", id, "/send" ].join("");
             
             function _send(msg) {
-                var url = [ "/channel/", id, "/send" ].join("");
                 client.open("POST", url);
                 client.onreadystatechange = function() {
                     if(client.readyState !== 4) { return; }
