@@ -5,6 +5,12 @@
     var url = require("url");
     var event = require("../event");
 
+    var cookie = { parse: function(data) {
+        var parsed = {};
+        (data || "").replace(/(\S*)=(\S*)(;\s*|$)/g, function(_, key, val) { parsed[key] = val; return _; });
+        return parsed;
+    } };
+    
     var Channel = (function() {
         var nextInfoId = (function() {
             var infoId = 1;
@@ -16,7 +22,7 @@
             res.sendHeader(200, { "Content-Length": body.length,
                                   "Content-Type": "application/json",
                                   "Cache-Control": "no-cache",
-                                  "Set-Cookie": userId  + "; path=/;"});
+                                  "Set-Cookie": "user-id=" + userId  + "; path=/channel;"});
             res.end(body);
         }
         
@@ -118,9 +124,9 @@
                     var uri = url.parse(req.url, true);
                     var channelId = regSend.exec(uri.pathname)[1];
                     
-                    channels[channelId] = channels[channelId] || (new Channel(channelId));
+                    channels[channelId] = cookie.parse(channels[channelId])["user-id"] || (new Channel(channelId));
                     
-                    var userId = req.headers["cookie"] || nextUserId();
+                    var userId = cookie.parse(req.headers["cookie"])["user-id"] || nextUserId();
                     var type = uri.query["type"];
                     channels[channelId].info(userId, type, res);
                 }
@@ -137,7 +143,7 @@
                     
                     channels[channelId] = channels[channelId] || (new Channel(channelId));
                     
-                    var userId = req.headers["cookie"] || nextUserId();
+                    var userId = cookie.parse(req.headers["cookie"])["user-id"] || nextUserId();
                     
                     // Reading POST data
                     var data = ""
@@ -150,7 +156,7 @@
                         res.sendHeader(200, { "Content-Length": infoId.length,
                                               "Content-Type": "text/plain",
                                               "Cache-Control": "no-cache",
-                                              "Set-Cookie": userId + "; path=/;"});
+                                              "Set-Cookie": "user-id=" + userId + "; path=/channel;"});
                         res.end(infoId);
                     });
                 }
@@ -167,8 +173,21 @@
                     
                     channels[channelId] = channels[channelId] || (new Channel(channelId));
                     
-                    var userId = req.headers["cookie"] || nextUserId();
+                    var userId = cookie.parse(req.headers["cookie"])["user-id"] || nextUserId();
                     var infoId = parseInt(uri.query["info-id"], 10) || 0;
+                    
+                    sys.puts("sometihng: " + req.headers["cookie"]);
+                    if(!req.headers["cookie"]) {
+                        var body = infoId.toString();
+                        res.sendHeader(200, { "Content-Length": body.length,
+                                              "Content-Type": "application/json",
+                                              "Cache-Control": "no-cache",
+                                              "Set-Cookie": "user-id=" + userId  + "; path=/channel;"});
+                        res.end(body);
+                        sys.puts("New user id generated: userid: " + userId);
+                        return;
+                    }
+                    
                     channels[channelId].read(userId, infoId, res);
                     
                     sys.puts(req.headers["cookie"]);
