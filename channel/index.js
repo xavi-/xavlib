@@ -176,7 +176,6 @@
                     var userId = cookie.parse(req.headers["cookie"])["user-id"] || nextUserId();
                     var infoId = parseInt(uri.query["info-id"], 10) || 0;
                     
-                    sys.puts("sometihng: " + req.headers["cookie"]);
                     if(!req.headers["cookie"]) {
                         var body = infoId.toString();
                         res.sendHeader(200, { "Content-Length": body.length,
