@@ -35,7 +35,9 @@
             
             this.lastInfoId = 0;
             
-            this.users = function() { return users; };
+            this.users = function() {
+                return Object.keys(users).map(function(k) { return { userId: k, idle: users[k] }; }); 
+            };
             
             this.onReceive = event.create(this);
             
@@ -92,11 +94,18 @@
                 } else { sendJSON(userId, content, res); }
             };
             
+            this.destroy = function destroy() {
+                responses // Removing old responses
+                    .forEach(function(o) { sendJSON(o.userId, [], o.response); o.response = null; });
+                
+                delete channels[this.id]
+            };
+            
             setInterval(function() {
                 var curTime = (new Date()).getTime();
                 responses // Removing old responses
                     .filter(function(o) { return curTime - o.time > 45000; })
-                    .forEach(function(o) { sendJSON(o.userId, [], o.response);  o.response = null; });
+                    .forEach(function(o) { sendJSON(o.userId, [], o.response); o.response = null; });
                 responses = responses.filter(function(o) { return o.response != null });
                 
                 for(var userId in users) { users[userId] -= 1; }
