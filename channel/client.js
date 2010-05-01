@@ -7,7 +7,7 @@
         var onreceive = [], lastInfoId = initInfo || 0, stopped = false;;
         
         var listen = (function() {
-            var client = xhr();
+            var client = xhr(), baseUrl = "/channel/" + id + "/read?info-id=";
             
             window.onbeforeunload = function() {
                 stopped = true;
@@ -16,12 +16,10 @@
                 client.send();
             };
             
-            return function() {
-                var url = [ "/channel/", id, "/read?info-id=", lastInfoId ].join("");
-                
+            return function() {                
                 if(stopped) { return; }
                 
-                client.open("GET", url);
+                client.open("GET", baseUrl + lastInfoId);
                 client.onreadystatechange = function() {            
                     if(client.readyState !== 4) { return; }
                     
