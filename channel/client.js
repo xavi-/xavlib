@@ -4,13 +4,22 @@
     }
     
     function Channel(id, initInfo) {
-        var onreceive = [], lastInfoId = initInfo || 0;
+        var onreceive = [], lastInfoId = initInfo || 0, stopped = false;;
         
         var listen = (function() {
             var client = xhr();
             
+            window.onbeforeunload = function() {
+                stopped = true;
+                client.abort();
+                client.open("POST", "/channel/" + id + "/info?type=remove-me");
+                client.send();
+            };
+            
             return function() {
                 var url = [ "/channel/", id, "/read?info-id=", lastInfoId ].join("");
+                
+                if(stopped) { return; }
                 
                 client.open("GET", url);
                 client.onreadystatechange = function() {            

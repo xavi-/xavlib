@@ -48,7 +48,7 @@
                 else if(type === "remove-me") {
                     content.message = (users[userId] ? "OK" : "NA");
                     responses = responses.filter(function(o) { return o.userId !== userId; });
-                    users[userId] = 0;
+                    users[userId] = 3;
                 }
                 else { content.message = "Unknown Type"; }
                 
@@ -108,9 +108,9 @@
                     .forEach(function(o) { sendJSON(o.userId, [], o.response); o.response = null; });
                 responses = responses.filter(function(o) { return o.response != null });
                 
-                for(var userId in users) { users[userId] -= 1; }
-                responses.forEach(function(o) { users[o.userId] = 2; });
-                for(var userId in users) if(users[userId] <= 0) { delete users[userId]; }
+                for(var userId in users) { users[userId] += 1; }
+                responses.forEach(function(o) { users[o.userId] = 0; });
+                for(var userId in users) if(users[userId] > 2) { delete users[userId]; }
             }, 5000);
             
             context.onCreate.trigger(id, this);
@@ -133,10 +133,11 @@
                     var uri = url.parse(req.url, true);
                     var channelId = regSend.exec(uri.pathname)[1];
                     
-                    channels[channelId] = cookie.parse(channels[channelId])["user-id"] || (new Channel(channelId));
+                    channels[channelId] = channels[channelId] || (new Channel(channelId));
                     
                     var userId = cookie.parse(req.headers["cookie"])["user-id"] || nextUserId();
                     var type = uri.query["type"];
+                    
                     channels[channelId].info(userId, type, res);
                 }
             });
