@@ -53,7 +53,7 @@
             var queue = [], inflight = false, client = xhr();
             var url = [ "/channel/", id, "/send" ].join("");
             
-            function _send(msg) {
+            function _send() {
                 client.open("POST", url);
                 client.onreadystatechange = function() {
                     if(client.readyState !== 4) { return; }
@@ -62,17 +62,19 @@
                     
                     if(infoId > lastInfoId) { lastInfoId = infoId; }
                     
-                    if(queue.length > 0) { setTimeout(function() { _send(queue.shift()); }, 0); }
+                    if(queue.length > 0) { setTimeout(_send, 0); }
                     else { inflight = false; }
                 };
-                client.send(msg);
+                client.send(JSON.stringify(queue));
+                queue = [];
                 
                 inflight = true;
             }
             
             return function send(msg) {
-                if(inflight) { queue.push(JSON.stringify(msg)); }
-                else { _send(JSON.stringify(msg)); }
+                queue.push(msg);
+                
+                if(!inflight) { _send(); }
             };
         })();
     };

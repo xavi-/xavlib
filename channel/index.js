@@ -159,9 +159,12 @@
                     var data = ""
                     req.addListener("data", function(chunk) { data += chunk; });
                     req.addListener("end", function() {
-                        var content = JSON.parse(data);
-                        var infoId = channels[channelId].send(userId, content).toString();
+                        var messages = JSON.parse(data);
+                        var channel = channels[channelId];
                         
+                        messages.forEach(function(msg) { channel.send(userId, msg); });
+                        
+                        var infoId = channel.lastInfoId.toString();
                         // reply new info to listeners
                         res.sendHeader(200, { "Content-Length": infoId.length,
                                               "Content-Type": "text/plain",
