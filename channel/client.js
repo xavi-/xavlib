@@ -43,7 +43,7 @@
         
         this.id = function() { return id; };
         
-        this.userId = function() { return document.cookie; };
+        this.userId = function() { return document.cookie.match(/user-id=([0-9]+)(;|$)/)[1] };
         
         this.onReceive = function onReceive(l) { onreceive.push(l); };
         

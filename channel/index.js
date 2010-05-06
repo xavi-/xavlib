@@ -22,7 +22,7 @@
             res.sendHeader(200, { "Content-Length": body.length,
                                   "Content-Type": "application/json",
                                   "Cache-Control": "no-cache",
-                                  "Set-Cookie": "user-id=" + userId  + "; path=/channel;"});
+                                  "Set-Cookie": "user-id=" + userId  + "; path=/;"});
             res.end(body);
         }
         
@@ -169,7 +169,7 @@
                         res.sendHeader(200, { "Content-Length": infoId.length,
                                               "Content-Type": "text/plain",
                                               "Cache-Control": "no-cache",
-                                              "Set-Cookie": "user-id=" + userId + "; path=/channel;"});
+                                              "Set-Cookie": "user-id=" + userId + "; path=/;"});
                         res.end(infoId);
                     });
                 }
@@ -194,7 +194,7 @@
                         res.sendHeader(200, { "Content-Length": body.length,
                                               "Content-Type": "application/json",
                                               "Cache-Control": "no-cache",
-                                              "Set-Cookie": "user-id=" + userId  + "; path=/channel;"});
+                                              "Set-Cookie": "user-id=" + userId  + "; path=/;"});
                         res.end(body);
                         sys.puts("New user id generated: userid: " + userId);
                         return;
