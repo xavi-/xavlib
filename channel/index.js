@@ -186,10 +186,12 @@
                     
                     channels[channelId] = channels[channelId] || (new Channel(channelId));
                     
-                    var userId = cookie.parse(req.headers["cookie"])["user-id"] || nextUserId();
+                    var userId = cookie.parse(req.headers["cookie"])["user-id"];
                     var infoId = parseInt(uri.query["info-id"], 10) || 0;
                     
-                    if(!req.headers["cookie"]) {
+                    if(!userId) { // set user-id if user doesn't have one
+                        userId = nextUserId();
+                        
                         var body = infoId.toString();
                         res.sendHeader(200, { "Content-Length": body.length,
                                               "Content-Type": "application/json",
