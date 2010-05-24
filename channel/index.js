@@ -19,10 +19,10 @@
         
         function sendJSON(userId, content, res) {
             var body = JSON.stringify(content);                    
-            res.sendHeader(200, { "Content-Length": body.length,
-                                  "Content-Type": "application/json",
-                                  "Cache-Control": "no-cache",
-                                  "Set-Cookie": "user-id=" + userId  + "; path=/;"});
+            res.writeHead(200, { "Content-Length": body.length,
+                                 "Content-Type": "application/json",
+                                 "Cache-Control": "no-cache",
+                                 "Set-Cookie": "user-id=" + userId  + "; path=/;"});
             res.end(body);
         }
         
@@ -166,10 +166,10 @@
                         
                         var infoId = channel.lastInfoId.toString();
                         // reply new info to listeners
-                        res.sendHeader(200, { "Content-Length": infoId.length,
-                                              "Content-Type": "text/plain",
-                                              "Cache-Control": "no-cache",
-                                              "Set-Cookie": "user-id=" + userId + "; path=/;"});
+                        res.writeHead(200, { "Content-Length": infoId.length,
+                                             "Content-Type": "text/plain",
+                                             "Cache-Control": "no-cache",
+                                             "Set-Cookie": "user-id=" + userId + "; path=/;"});
                         res.end(infoId);
                     });
                 }
@@ -193,10 +193,10 @@
                         userId = nextUserId();
                         
                         var body = infoId.toString();
-                        res.sendHeader(200, { "Content-Length": body.length,
-                                              "Content-Type": "application/json",
-                                              "Cache-Control": "no-cache",
-                                              "Set-Cookie": "user-id=" + userId  + "; path=/;"});
+                        res.writeHead(200, { "Content-Length": body.length,
+                                             "Content-Type": "application/json",
+                                             "Cache-Control": "no-cache",
+                                             "Set-Cookie": "user-id=" + userId  + "; path=/;"});
                         res.end(body);
                         sys.puts("New user id generated: userid: " + userId);
                         return;
