@@ -27,14 +27,25 @@
         }
         
         return function Channel(id) {
-            var users = {}, responses = [];
+            var users = {}, responses = [], ch = this;
             
+            function statusChange(userId) {
+                if(!users[userId]) { ch.onUserChange.trigger({ userId: userId, event: "join" }); }
+            }
+            
+            function removeUser(userId) {
+                delete users[userId];
+                ch.onUserChange.trigger({ userId: userId, event: "leave" });
+            }
+
             this.id = id;
             
             this.data = [];
             
             this.lastInfoId = 0;
             
+            this.onUserChange = event.create(this);
+
             this.users = function() {
                 return Object.keys(users).map(function(k) { return { userId: k, idle: users[k] }; }); 
             };
@@ -101,7 +112,7 @@
                 delete channels[this.id]
             };
             
-            setInterval(function() {
+            setInterval(function() { // Reset connections and reap users
                 var curTime = (new Date()).getTime();
                 responses // Removing old responses
                     .filter(function(o) { return curTime - o.time > 45000; })
@@ -109,8 +120,8 @@
                 responses = responses.filter(function(o) { return o.response != null });
                 
                 for(var userId in users) { users[userId] += 1; }
-                responses.forEach(function(o) { users[o.userId] = 0; });
-                for(var userId in users) if(users[userId] > 2) { delete users[userId]; }
+                responses.forEach(function(o) { statusChange(o.userId); users[o.userId] = 0; });
+                for(var userId in users) if(users[userId] > 2) { removeUser(userId); }
             }, 5000);
             
             context.onCreate.trigger(id, this);
