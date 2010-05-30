@@ -30,7 +30,7 @@
             var users = {}, responses = [], ch = this;
             
             function statusChange(userId) {
-                if(!users[userId]) { ch.onUserChange.trigger({ userId: userId, event: "join" }); }
+                if(users[userId] == null) { ch.onUserChange.trigger({ userId: userId, event: "join" }); }
             }
             
             function removeUser(userId) {
@@ -59,7 +59,7 @@
                 else if(type === "remove-me") {
                     content.message = (users[userId] ? "OK" : "NA");
                     responses = responses.filter(function(o) { return o.userId !== userId; });
-                    users[userId] = 3;
+                    removeUser(userId);
                 }
                 else { content.message = "Unknown Type"; }
                 
@@ -103,6 +103,9 @@
                     responses = responses.filter(function(o) { return o.userId !== userId; });
                     responses.push({ userId: userId, response: res, time: (new Date()).getTime() });
                 } else { sendJSON(userId, content, res); }
+                
+                statusChange(userId);
+                users[userId] = 0;
             };
             
             this.destroy = function destroy() {
@@ -120,7 +123,7 @@
                 responses = responses.filter(function(o) { return o.response != null });
                 
                 for(var userId in users) { users[userId] += 1; }
-                responses.forEach(function(o) { statusChange(o.userId); users[o.userId] = 0; });
+                responses.forEach(function(o) { users[o.userId] = 0; });
                 for(var userId in users) if(users[userId] > 2) { removeUser(userId); }
             }, 5000);
             
