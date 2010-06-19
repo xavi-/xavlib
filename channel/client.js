@@ -16,7 +16,7 @@
                 client.send();
             };
             
-            return function() {                
+            return function() {
                 if(stopped) { return; }
                 
                 client.open("GET", baseUrl + lastInfoId);
