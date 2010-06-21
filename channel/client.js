@@ -1,4 +1,6 @@
 (function(window, undefined) {
+    function noop() { }
+    
     function xhr() { 
         return window.ActiveXObject ? new ActiveXObject("Microsoft.XMLHTTP") : new XMLHttpRequest(); 
     }
@@ -20,7 +22,7 @@
                 if(stopped) { return; }
                 
                 client.open("GET", baseUrl + lastInfoId);
-                client.onreadystatechange = function() {            
+                client.onreadystatechange = function() {
                     if(client.readyState !== 4) { return; }
                     
                     if(client.status !== 200) { setTimeout(listen, 0); return; }
@@ -50,20 +52,24 @@
         this.start = function start() { listen(); };
         
         this.send = (function() { 
-            var queue = [], inflight = false, client = xhr();
+            var queue = [], callbacks = [];
+            var inflight = false, client = xhr();
             var url = [ "/channel/", id, "/send" ].join("");
             
-            function _send() {
+            function _send(errs) {
                 client.open("POST", url);
                 client.onreadystatechange = function() {
                     if(client.readyState !== 4) { return; }
                     
-                    var infoId = parseInt(client.responseText, 10) || 0;
+                    var infoIds = JSON.parse(client.responseText) || [];
                     
-                    if(infoId > lastInfoId) { lastInfoId = infoId; }
+                    for(var i = 0; i < infoIds.length; i++) {
+                        if(infoIds[i] === -1) { errs[i](); }
+                        else if(infoIds[i] > lastInfoId) { lastInfoId = infoIds[i]; }
+                    }
                     
-                    if(queue.length > 0) { setTimeout(_send, 0); }
-                    else { inflight = false; }
+                    if(queue.length === 0) { inflight = false; }
+                    else { setTimeout(function() { _send(callbacks); }, 0); }
                 };
                 client.send(JSON.stringify(queue));
                 queue = [];
@@ -71,10 +77,11 @@
                 inflight = true;
             }
             
-            return function send(msg) {
+            return function send(msg, err) {
                 queue.push(msg);
+                callbacks.push(err || noop);
                 
-                if(!inflight) { _send(); }
+                if(!inflight) { _send(callbacks); }
             };
         })();
     };

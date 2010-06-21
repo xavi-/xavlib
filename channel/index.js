@@ -66,7 +66,7 @@
                 sendJSON(userId, content, res);
             };
             
-            this.send = function send(userId, content) {                
+            this.send = function send(userId, content) {
                 var info = [], lastInfoId;
                 function sendMore(userId, content) {
                     lastInfoId = nextInfoId();
@@ -176,15 +176,14 @@
                         var messages = JSON.parse(data);
                         var channel = channels[channelId];
                         
-                        messages.forEach(function(msg) { channel.send(userId, msg); });
+                        var infoIds = JSON.stringify(messages.map(function(msg) { return channel.send(userId, msg); }));
                         
-                        var infoId = channel.lastInfoId.toString();
                         // reply new info to listeners
-                        res.writeHead(200, { "Content-Length": infoId.length,
+                        res.writeHead(200, { "Content-Length": infoIds.length,
                                              "Content-Type": "text/plain",
                                              "Cache-Control": "no-cache",
                                              "Set-Cookie": "user-id=" + userId + "; path=/;"});
-                        res.end(infoId);
+                        res.end(infoIds);
                     });
                 }
             });
