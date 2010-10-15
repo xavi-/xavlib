@@ -1,4 +1,6 @@
 (function(window, undefined) {
+    var BACKOFF_RATE = 2;
+    
     function noop() { }
     
     function xhr() { 
@@ -6,6 +8,7 @@
     }
     
     function Channel(id, initInfo) {
+        var resetTime = 1;
         var onreceive = [], lastInfoId = initInfo || 0, stopped = false;;
         
         var listen = (function() {
@@ -25,7 +28,12 @@
                 client.onreadystatechange = function() {
                     if(client.readyState !== 4) { return; }
                     
-                    if(client.status !== 200) { setTimeout(listen, 0); return; }
+                    if(client.status === 200) { resetTime = 1; }
+                    else {
+                        setTimeout(listen, resetTime);
+                        resetTime *= BACKOFF_RATE;
+                        return;
+                    }
                     
                     if(client.responseText) {
                         var info = JSON.parse(client.responseText);

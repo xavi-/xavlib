@@ -118,7 +118,7 @@
             setInterval(function() { // Reset connections and reap users
                 var curTime = (new Date()).getTime();
                 responses // Removing old responses
-                    .filter(function(o) { return curTime - o.time > 45000; })
+                    .filter(function(o) { return curTime - o.time > 45000; }) // After 45secs close connection
                     .forEach(function(o) { sendJSON(o.userId, [], o.response); o.response = null; });
                 responses = responses.filter(function(o) { return o.response != null });
                 
