@@ -18,7 +18,7 @@
         })();
         
         function sendJSON(userId, content, res) {
-            var body = JSON.stringify(content);                    
+            var body = JSON.stringify(content);
             res.writeHead(200, { "Content-Length": body.length,
                                  "Content-Type": "application/json",
                                  "Cache-Control": "no-cache",
