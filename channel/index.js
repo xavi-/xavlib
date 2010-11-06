@@ -1,7 +1,6 @@
 // /channel/<session-id>/send?msg=<json> => returns an info-id
 // /channel/<session-id>/read?info-id=<int-id> => returns a list of json messages
 (function(context) {
-    var sys = require("sys");
     var url = require("url");
     var event = require("../event");
 
@@ -211,13 +210,13 @@
                                              "Cache-Control": "no-cache",
                                              "Set-Cookie": "user-id=" + userId  + "; path=/;"});
                         res.end(body);
-                        sys.puts("New user id generated: userid: " + userId);
+                        console.log("New user id generated: userid: " + userId);
                         return;
                     }
                     
                     channels[channelId].read(userId, infoId, res);
                     
-                    sys.puts(req.headers["cookie"]);
+                    console.log(req.headers["cookie"]);
                 }
             });
         })();
