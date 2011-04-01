@@ -132,94 +132,75 @@
     
     var channels = {};
     
-    function start(srv) {
+    function init(line) {
         var nextUserId = (function() {
             var userId = (new Date()).getTime();
             return function nextUserId() { return (userId++).toString(); };
         })();
         
-        (function() { // Info
-            var regSend = new RegExp("/channel/([a-zA-Z0-9_-]+)/info");
-            srv.patterns.push({
-                test: function(req) { return regSend.test(url.parse(req.url).pathname); },
-                handler: function(req, res) {
-                    var uri = url.parse(req.url, true);
-                    var channelId = regSend.exec(uri.pathname)[1];
+        line.add({
+            "r`^/channel/([a-zA-Z0-9_-]+)/info$`": function(req, res, match) { // Info
+                var uri = url.parse(req.url, true);
+                var channelId = match
+                
+                channels[channelId] = channels[channelId] || (new Channel(channelId));
+                
+                var userId = cookie.parse(req.headers["cookie"])["user-id"] || nextUserId();
+                var type = uri.query["type"];
+                
+                channels[channelId].info(userId, type, res);
+            },
+            "r`^/channel/([a-zA-Z0-9_-]+)/send$`": function(req, res, match) { // Send
+                var channelId = match[0];
+                
+                channels[channelId] = channels[channelId] || (new Channel(channelId));
+                
+                var userId = cookie.parse(req.headers["cookie"])["user-id"] || nextUserId();
+                
+                // Reading POST data
+                var data = ""
+                req.addListener("data", function(chunk) { data += chunk; });
+                req.addListener("end", function() {
+                    var messages = JSON.parse(data);
+                    var channel = channels[channelId];
                     
-                    channels[channelId] = channels[channelId] || (new Channel(channelId));
+                    var infoIds = JSON.stringify(messages.map(function(msg) { return channel.send(userId, msg); }));
                     
-                    var userId = cookie.parse(req.headers["cookie"])["user-id"] || nextUserId();
-                    var type = uri.query["type"];
+                    // reply new info to listeners
+                    res.writeHead(200, { "Content-Length": infoIds.length,
+                                         "Content-Type": "text/plain",
+                                         "Cache-Control": "no-cache",
+                                         "Set-Cookie": "user-id=" + userId + "; path=/;"});
+                    res.end(infoIds);
+                });
+            },
+            "r`^/channel/([a-zA-Z0-9_-]+)/read$`": function(req, res, match) {
+                var uri = url.parse(req.url, true);
+                var channelId = match[0];
+                
+                channels[channelId] = channels[channelId] || (new Channel(channelId));
+                
+                var userId = cookie.parse(req.headers["cookie"])["user-id"];
+                var infoId = parseInt(uri.query["info-id"], 10) || 0;
+                
+                if(!userId) { // set user-id if user doesn't have one
+                    userId = nextUserId();
                     
-                    channels[channelId].info(userId, type, res);
+                    var body = infoId.toString();
+                    res.writeHead(200, { "Content-Length": body.length,
+                                         "Content-Type": "application/json",
+                                         "Cache-Control": "no-cache",
+                                         "Set-Cookie": "user-id=" + userId  + "; path=/;"});
+                    res.end(body);
+                    console.log("New user id generated: userid: " + userId);
+                    return;
                 }
-            });
-        })();
-        
-        (function() { // Send
-            var regSend = new RegExp("/channel/([a-zA-Z0-9_-]+)/send");
-            srv.patterns.push({
-                test: function(req) { return regSend.test(url.parse(req.url).pathname); },
-                handler: function(req, res) {
-                    var uri = url.parse(req.url);
-                    var channelId = regSend.exec(uri.pathname)[1];
-                    
-                    channels[channelId] = channels[channelId] || (new Channel(channelId));
-                    
-                    var userId = cookie.parse(req.headers["cookie"])["user-id"] || nextUserId();
-                    
-                    // Reading POST data
-                    var data = ""
-                    req.addListener("data", function(chunk) { data += chunk; });
-                    req.addListener("end", function() {
-                        var messages = JSON.parse(data);
-                        var channel = channels[channelId];
-                        
-                        var infoIds = JSON.stringify(messages.map(function(msg) { return channel.send(userId, msg); }));
-                        
-                        // reply new info to listeners
-                        res.writeHead(200, { "Content-Length": infoIds.length,
-                                             "Content-Type": "text/plain",
-                                             "Cache-Control": "no-cache",
-                                             "Set-Cookie": "user-id=" + userId + "; path=/;"});
-                        res.end(infoIds);
-                    });
-                }
-            });
-        })();
-        
-        (function() { // Read
-            var regRead = new RegExp("/channel/([a-zA-Z0-9_-]+)/read");
-            srv.patterns.push({
-                test: function(req) { return regRead.test(url.parse(req.url).pathname); },
-                handler: function(req, res) { 
-                    var uri = url.parse(req.url, true);
-                    var channelId = regRead.exec(uri.pathname)[1];
-                    
-                    channels[channelId] = channels[channelId] || (new Channel(channelId));
-                    
-                    var userId = cookie.parse(req.headers["cookie"])["user-id"];
-                    var infoId = parseInt(uri.query["info-id"], 10) || 0;
-                    
-                    if(!userId) { // set user-id if user doesn't have one
-                        userId = nextUserId();
-                        
-                        var body = infoId.toString();
-                        res.writeHead(200, { "Content-Length": body.length,
-                                             "Content-Type": "application/json",
-                                             "Cache-Control": "no-cache",
-                                             "Set-Cookie": "user-id=" + userId  + "; path=/;"});
-                        res.end(body);
-                        console.log("New user id generated: userid: " + userId);
-                        return;
-                    }
-                    
-                    channels[channelId].read(userId, infoId, res);
-                    
-                    console.log(req.headers["cookie"]);
-                }
-            });
-        })();
+                
+                channels[channelId].read(userId, infoId, res);
+                
+                console.log(req.headers["cookie"]);
+            }
+        });
     }
     
     function create(id) {
@@ -227,7 +208,7 @@
         return channels[id];
     }
     
-    context.start = start;
+    context.init = init;
     context.channels = channels;
     context.create = create;
     context.onCreate = event.create();
