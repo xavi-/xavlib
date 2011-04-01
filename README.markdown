@@ -1,5 +1,7 @@
 # Random Node Library
 
+This repository is totally obsolete.
+
 A collection of various "libraries" that I've been using for my personal projects.
 
 ## Event
@@ -8,7 +10,7 @@ A dead simple event "library"
 
 ## Simple Router
 
-Gotta serve pages some how...
+Use beeline: https://github.com/Xavi-/beeline
 
 ## Channel
 
