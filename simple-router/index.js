@@ -17,7 +17,7 @@
             if(buffers[path]) { callback(null, buffers[path]); return; }
             
             fs.readFile(path, function(err, data) {
-                if(err) { callback(err); };
+                if(err) { callback(err); return; }
                 
                 buffers[path] = data;
                 callback(err, data);
