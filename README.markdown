@@ -6,7 +6,7 @@ A collection of various "libraries" that I've been using for my personal project
 
 ## Event
 
-A dead simple event "library"
+Use [EventEmitter](http://nodejs.org/docs/v0.4.6/api/events.html) instead.
 
 ## Simple Router
 

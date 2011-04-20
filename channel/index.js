@@ -2,7 +2,7 @@
 // /channel/<session-id>/read?info-id=<int-id> => returns a list of json messages
 (function(context) {
     var url = require("url");
-    var event = require("../event");
+    var events = require("events");
 
     var cookie = { parse: function(data) {
         var parsed = {};
@@ -29,12 +29,12 @@
             var users = {}, responses = [], ch = this;
             
             function statusChange(userId) {
-                if(users[userId] == null) { ch.onUserChange.trigger({ userId: userId, event: "join" }); }
+                if(users[userId] == null) { _events.emit("change", { userId: userId, event: "join" }); }
             }
             
             function removeUser(userId) {
                 delete users[userId];
-                ch.onUserChange.trigger({ userId: userId, event: "leave" });
+                _events.emit("change", { userId: userId, event: "leave" });
             }
 
             this.id = id;
@@ -43,13 +43,14 @@
             
             this.lastInfoId = 0;
             
-            this.onUserChange = event.create(this);
+            var _events = new events.EventEmitter();
+            this.onUserChange = function(listener) { _events.on("change", listener); };
 
             this.users = function() {
                 return Object.keys(users).map(function(k) { return { userId: k, idle: users[k] }; }); 
             };
             
-            this.onReceive = event.create(this);
+            this.onReceive = function(listener) { _events.on("receive", listener); };
             
             this.info = function info(userId, type, res) {
                 var content = { type: type };
@@ -75,7 +76,7 @@
                 
                 sendMore(userId, content);
                 
-                this.onReceive.trigger(info[0].message, sendMore);
+                _events.emit("recieve", info[0].message, sendMore);
                 
                 if(!info[0].message.content) { return -1; }
                 
@@ -126,7 +127,7 @@
                 for(var userId in users) if(users[userId] > 2) { removeUser(userId); }
             }, 5000);
             
-            context.onCreate.trigger(id, this);
+            createEvent.emit("create", id, this);
         };
     })();
     
@@ -208,8 +209,9 @@
         return channels[id];
     }
     
+    var createEvent = new events.EventEmitter();
     context.init = init;
     context.channels = channels;
     context.create = create;
-    context.onCreate = event.create();
+    context.onCreate = function(listener) { createEvent.on("create", listener); };
 })(exports);
